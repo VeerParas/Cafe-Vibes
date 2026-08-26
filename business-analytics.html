@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Vibes | Business Analytics</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #d97706;
+            --primary-strong: #b45309;
+            --success: #059669;
+            --danger: #dc2626;
+            --bg: #f7f3ea;
+            --bg-2: #fff8ef;
+            --card: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(148, 163, 184, 0.18);
+            --text: #1f2937;
+            --muted: #64748b;
+            --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(217, 119, 6, 0.16), transparent 34%),
+                radial-gradient(circle at top right, rgba(5, 150, 105, 0.12), transparent 30%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+            padding: 18px;
+        }
+
+        .page-shell { width: 100%; max-width: none; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.78));
+            padding: 18px 20px;
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+        }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-logo {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.8);
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+        }
+        h1 { font-size: clamp(1.8rem, 2.5vw, 2.8rem); color: var(--primary-strong); line-height: 1.05; }
+        .brand-copy { display: flex; flex-direction: column; gap: 2px; }
+        .brand-copy p { color: var(--muted); font-size: 0.86rem; }
+        .header-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+        .header-badge {
+            background: linear-gradient(135deg, #111827, #374151);
+            color: #fff;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .header-badge.primary { background: linear-gradient(135deg, var(--primary), var(--primary-strong)); }
+
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(14px);
+            min-height: calc(100vh - 138px);
+        }
+        h2 {
+            font-size: 1.08rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            letter-spacing: 0.01em;
+        }
+        .count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #9a3412;
+            background: #ffedd5;
+            border: 1px solid #fdba74;
+            line-height: 1;
+        }
+        .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 12px 0 18px 0; }
+        .cost-box {
+            background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,250,240,0.9));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 16px;
+            padding: 12px;
+        }
+        .cost-box label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        .cost-box input {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.92);
+        }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-top: 12px; }
+        .summary-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.75));
+            padding: 14px;
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: var(--shadow);
+        }
+        .summary-box p { font-size: 0.82rem; color: var(--muted); }
+        .summary-box h3 { font-size: 1.15rem; margin-top: 6px; }
+        .profit { color: var(--success); }
+        .loss { color: var(--danger); }
+        .save-note {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .muted-help { color: var(--muted); font-size: 0.78rem; margin-top: 6px; line-height: 1.5; }
+        .panel-toggle-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .panel-toggle-btn {
+            border: 2px solid transparent;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.88);
+            color: #475569;
+            padding: 11px 22px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.06);
+        }
+        .panel-toggle-btn:hover { background: rgba(255,255,255,1); color: #1e293b; }
+        /* Top-level Config / Analytics buttons get distinct active colours */
+        #show-config-panel-btn.active {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(15,23,42,0.22);
+        }
+        #show-analytics-panel-btn.active {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(5,150,105,0.28);
+        }
+        /* Sub-panel toggles keep the amber active style */
+        .panel-toggle-btn.active:not(#show-config-panel-btn):not(#show-analytics-panel-btn) {
+            background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(180,83,9,0.22);
+        }
+        .panel-section.hidden {
+            display: none;
+        }
+        .admin-config {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.35);
+        }
+        .config-block {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: rgba(255, 255, 255, 0.62);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+        }
+        .section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .section-head h2 {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 1.02rem;
+        }
+        .admin-row {
+            display: grid;
+            grid-template-columns: 1.6fr 0.9fr auto;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .admin-row.header {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 8px;
+        }
+        .admin-menu-list {
+            max-height: 270px;
+            overflow: auto;
+            margin-top: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 12px;
+            padding: 8px;
+            background: rgba(255,255,255,0.7);
+        }
+        .admin-menu-list input {
+            margin: 0;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary {
+            color: #fff;
+            background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+            box-shadow: 0 10px 20px rgba(180, 83, 9, 0.2);
+        }
+        .btn-secondary {
+            color: #0f172a;
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            background: rgba(255,255,255,0.95);
+        }
+        .btn-danger {
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            background: #fff1f2;
+            padding: 8px 10px;
+        }
+        .admin-status {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: #475569;
+        }
+        .wa-config-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        textarea.admin-template {
+            width: 100%;
+            min-height: 145px;
+            resize: vertical;
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.92);
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .analytics-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 14px;
+            margin-top: 12px;
+        }
+        .analytics-menu-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+        .analytics-menu-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08); }
+        .analytics-menu-photo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .analytics-menu-info {
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .analytics-menu-info strong { font-size: 0.9rem; color: #0f172a; }
+        .analytics-menu-info span { font-size: 0.8rem; color: #64748b; }
+
+        .ap-section.hidden { display: none; }
+        .analytics-table-wrap { overflow-y: auto; max-height: 300px; border: 1px solid rgba(148,163,184,0.18); border-radius: 14px; background: rgba(255,255,255,0.75); margin-top: 10px; }
+        .analytics-sheet-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        .analytics-sheet-table thead th { position: sticky; top: 0; z-index: 2; background: rgba(241,245,249,0.99); padding: 10px 14px; text-align: left; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; border-bottom: 2px solid rgba(148,163,184,0.25); white-space: nowrap; }
+        .analytics-sheet-table td { padding: 9px 14px; border-bottom: 1px solid rgba(148,163,184,0.10); vertical-align: middle; white-space: nowrap; }
+        .analytics-sheet-table tbody tr:last-child td { border-bottom: none; }
+        .analytics-sheet-table tbody tr:hover td { background: rgba(217,119,6,0.04); }
+        .analytics-sheet-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .ap-readonly { background: #f1f5f9 !important; font-weight: 700; color: #059669 !important; }
+        .ap-table-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .ap-table-head h2 { margin: 0; padding: 0; border: 0; font-size: 1rem; }
+
+        @media (max-width: 600px) {
+            body { padding: 12px; }
+            header { flex-direction: column; align-items: flex-start; }
+            .header-links { width: 100%; justify-content: flex-start; }
+            .brand-logo { width: 58px; height: 58px; }
+            .card { padding: 16px; border-radius: 18px; min-height: auto; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .admin-row { grid-template-columns: 1fr; }
+            .wa-config-grid { grid-template-columns: 1fr; }
+            .analytics-menu-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header>
+            <div class="brand">
+                <img src="Logo.png" alt="Cafe Vibes Logo" class="brand-logo">
+                <div class="brand-copy">
+                    <h1>Cafe Vibes</h1>
+                    <p>...A Space For Every Story...</p>
+                </div>
+            </div>
+            <div class="header-links">
+                <a href="index.html" class="header-badge">Home</a>
+                <a href="order.html" class="header-badge primary">New Order</a>
+            </div>
+        </header>
+
+        <div class="card">
+            <div class="panel-toggle-row">
+                <button type="button" id="show-config-panel-btn" class="panel-toggle-btn active">Configuration Panel</button>
+                <button type="button" id="show-analytics-panel-btn" class="panel-toggle-btn">Analytics Panel</button>
+            </div>
+
+            <div id="config-panel" class="panel-section">
+                <div class="admin-config" style="margin-top: 0; padding-top: 0; border-top: none;">
+                <div class="config-block">
+                <div class="section-head">
+                    <h2><span>Menu Items</span> <span id="admin-menu-count" class="count-badge">0</span></h2>
+                    <button type="button" class="btn btn-secondary" id="import-menu-btn">Import Menu Excel</button>
+                </div>
+                <div class="admin-row header">
+                    <span>Name</span>
+                    <span>Price</span>
+                    <span>Action</span>
+                </div>
+                <div id="admin-menu-list" class="admin-menu-list"></div>
+                <div class="admin-row" style="margin-top: 10px;">
+                    <input type="text" id="admin-new-item-name" placeholder="New item name">
+                    <input type="number" id="admin-new-item-price" min="0" step="0.01" placeholder="Selling price">
+                    <button type="button" id="admin-add-item-btn" class="btn btn-primary">Add Item</button>
+                </div>
+                <div class="btn-row">
+                    <button type="button" id="admin-save-menu-btn" class="btn btn-primary">Save Menu Changes</button>
+                </div>
+                <p id="admin-menu-status" class="admin-status">All menu changes here are applied to the Order page.</p>
+
+                <h2 style="margin-top: 20px;"><span>Menu Photos</span> <span id="analytics-menu-count" class="count-badge">0</span></h2>
+                <div id="analytics-menu-grid" class="analytics-menu-grid"></div>
+                </div>
+
+                <div class="config-block">
+                <h2><span>WhatsApp & Payment Settings</span></h2>
+                <div class="wa-config-grid">
+                    <div class="cost-box">
+                        <label for="admin-upi-id">UPI ID</label>
+                        <input id="admin-upi-id" type="text" placeholder="example@upi">
+                    </div>
+                    <div class="cost-box">
+                        <label for="admin-message-language">Message Language</label>
+                        <select id="admin-message-language">
+                            <option value="en">English</option>
+                            <option value="mr">Marathi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="button" id="admin-save-settings-btn" class="btn btn-primary">Save Settings</button>
+                </div>
+                <p id="admin-settings-status" class="admin-status">WhatsApp messages use built-in templates for the selected language.</p>
+                </div>
+
+                <div class="config-block">
+                <h2><span>Admin Access</span></h2>
+                <div class="wa-config-grid">
+                    <div class="cost-box">
+                        <label for="admin-password">New Admin Password</label>
+                        <input id="admin-password" type="password" placeholder="Leave blank to keep existing">
+                    </div>
+                    <div class="cost-box">
+                        <label for="admin-password-confirm">Confirm Password</label>
+                        <input id="admin-password-confirm" type="password" placeholder="Re-enter new password">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="button" id="admin-save-password-btn" class="btn btn-primary">Save Admin Password</button>
+                </div>
+                <p id="admin-password-status" class="admin-status">Set a password here to protect Admin login on the home page.</p>
+                </div>
+
+                </div>
+            </div>
+
+            <div id="analytics-panel" class="panel-section hidden">
+                <div class="panel-toggle-row" style="margin-bottom:16px;">
+                    <button type="button" id="ap-daily-btn" class="panel-toggle-btn active">Daily Entry</button>
+                    <button type="button" id="ap-monthly-btn" class="panel-toggle-btn">Monthly Fixed Costs</button>
+                    <button type="button" id="ap-dashboard-btn" class="panel-toggle-btn">Master Dashboard</button>
+                </div>
+
+                <!-- Daily Entry -->
+                <div id="ap-daily" class="ap-section">
+                    <div class="cost-grid">
+                        <div class="cost-box">
+                            <label for="ap-date">Date</label>
+                            <input type="date" id="ap-date">
+                        </div>
+                        <div class="cost-box">
+                            <label>Total Sales (auto from orders)</label>
+                            <input type="text" id="ap-sales-display" class="ap-readonly" readonly>
+                        </div>
+                    </div>
+                    <div class="cost-grid">
+                        <div class="cost-box">
+                            <label for="ap-dairy">Dairy Materials</label>
+                            <input id="ap-dairy" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-veggies">Veggies</label>
+                            <input id="ap-veggies" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-raw">Raw Materials</label>
+                            <input id="ap-raw" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-misc">Miscellaneous</label>
+                            <input id="ap-misc" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button type="button" id="ap-save-daily-btn" class="btn btn-primary">Save Entry</button>
+                    </div>
+                    <p id="ap-daily-status" class="admin-status"></p>
+                    <div class="ap-table-head">
+                        <h2><span>Daily Entries Log</span></h2>
+                        <button type="button" class="btn btn-secondary" onclick="window.exportDailyLog()">Export to Excel</button>
+                    </div>
+                    <div class="analytics-table-wrap">
+                        <table class="analytics-sheet-table">
+                            <thead><tr><th>Date</th><th>Sales</th><th>Dairy</th><th>Veggies</th><th>Raw</th><th>Misc</th><th>Total Cost</th><th>Net Profit</th></tr></thead>
+                            <tbody id="ap-daily-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Monthly Fixed Costs -->
+                <div id="ap-monthly" class="ap-section hidden">
+                    <div class="cost-grid">
+                        <div class="cost-box">
+                            <label for="ap-month">Month</label>
+                            <input type="month" id="ap-month">
+                        </div>
+                    </div>
+                    <div class="cost-grid">
+                        <div class="cost-box">
+                            <label for="ap-electricity">Electricity</label>
+                            <input id="ap-electricity" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-water">Water</label>
+                            <input id="ap-water" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-staff">Staff</label>
+                            <input id="ap-staff" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                        <div class="cost-box">
+                            <label for="ap-gas">Gas</label>
+                            <input id="ap-gas" type="number" min="0" step="0.01" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="btn-row">
+                        <button type="button" id="ap-save-monthly-btn" class="btn btn-primary">Save Monthly Costs</button>
+                    </div>
+                    <p id="ap-monthly-status" class="admin-status"></p>
+                    <div class="ap-table-head">
+                        <h2><span>Monthly Fixed Costs Log</span></h2>
+                        <button type="button" class="btn btn-secondary" onclick="window.exportMonthlyLog()">Export to Excel</button>
+                    </div>
+                    <div class="analytics-table-wrap">
+                        <table class="analytics-sheet-table">
+                            <thead><tr><th>Month</th><th>Electricity</th><th>Water</th><th>Staff</th><th>Gas</th><th>Total Fixed</th></tr></thead>
+                            <tbody id="ap-monthly-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Master Dashboard -->
+                <div id="ap-dashboard" class="ap-section hidden">
+                    <div class="summary-grid">
+                        <div class="summary-box">
+                            <p>Total Sales (All Time)</p>
+                            <h3 id="summary-total-sales">₹0.00</h3>
+                        </div>
+                        <div class="summary-box">
+                            <p>Total Items Sold</p>
+                            <h3 id="summary-total-items">0</h3>
+                        </div>
+                        <div class="summary-box">
+                            <p>Total Material Cost</p>
+                            <h3 id="summary-total-expense">₹0.00</h3>
+                        </div>
+                        <div class="summary-box">
+                            <p>Total Fixed Charges</p>
+                            <h3 id="summary-total-monthly">₹0.00</h3>
+                        </div>
+                        <div class="summary-box">
+                            <p>Net Profit</p>
+                            <h3 id="summary-net-profit" class="profit">₹0.00</h3>
+                        </div>
+                    </div>
+                    <div class="ap-table-head" style="margin-top:20px;">
+                        <h2><span>Monthly Performance</span></h2>
+                        <button type="button" class="btn btn-secondary" onclick="window.exportMasterDashboard()">Export to Excel</button>
+                    </div>
+                    <div class="analytics-table-wrap">
+                        <table class="analytics-sheet-table">
+                            <thead><tr><th>Month</th><th>Sales</th><th>Items Sold</th><th>Material Cost</th><th>Fixed Cost</th><th>Total Cost</th><th>Net Profit</th></tr></thead>
+                            <tbody id="ap-master-tbody"></tbody>
+                        </table>
+                    </div>
+                    <p class="save-note" style="margin-top:12px;">All data is auto-saved in your browser on this device.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+    <script src="app.extras.js"></script>
+    <script>
+        (function () {
+            function nameToSlug(name) {
+                return String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "item";
+            }
+
+            function getKeywordPhoto(name) {
+                var n = String(name || "").toLowerCase();
+                if (n.indexOf("cappuccino") !== -1 || n.indexOf("coffee") !== -1)
+                    return "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("latte") !== -1)
+                    return "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("mocha") !== -1)
+                    return "https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("espresso") !== -1)
+                    return "https://images.unsplash.com/photo-1510591509098-f4fdc6d0ff04?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("pizza") !== -1)
+                    return "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("burger") !== -1)
+                    return "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("sandwich") !== -1)
+                    return "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("tea") !== -1)
+                    return "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("pasta") !== -1)
+                    return "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("cake") !== -1 || n.indexOf("pastry") !== -1)
+                    return "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("muffin") !== -1)
+                    return "https://images.unsplash.com/photo-1607958996333-41aef7caefaa?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("waffle") !== -1)
+                    return "https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("pancake") !== -1)
+                    return "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("juice") !== -1 || n.indexOf("smoothie") !== -1)
+                    return "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("shake") !== -1 || n.indexOf("milkshake") !== -1)
+                    return "https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("salad") !== -1)
+                    return "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("soup") !== -1)
+                    return "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("fries") !== -1 || n.indexOf("chips") !== -1)
+                    return "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("noodle") !== -1)
+                    return "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("wrap") !== -1 || n.indexOf("roll") !== -1)
+                    return "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=600&q=80";
+                if (n.indexOf("ice cream") !== -1 || n.indexOf("icecream") !== -1)
+                    return "https://images.unsplash.com/photo-1567206563114-c179706e5e5e?auto=format&fit=crop&w=600&q=80";
+                return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80";
+            }
+
+            // Cascade: slug.ext → original-name.ext → keyword URL
+            window.cvAnalyticsPhotoFallback = function (img, attempt) {
+                var name = img.getAttribute("data-item-name") || "";
+                var slug = nameToSlug(name);
+                var exts = ["jpg", "jpeg", "png", "webp", "gif"];
+                if (attempt < exts.length) {
+                    img.onerror = function () { window.cvAnalyticsPhotoFallback(img, attempt + 1); };
+                    img.src = "photos/" + slug + "." + exts[attempt];
+                } else if (attempt < exts.length * 2) {
+                    img.onerror = function () { window.cvAnalyticsPhotoFallback(img, attempt + 1); };
+                    img.src = "photos/" + name + "." + exts[attempt - exts.length];
+                } else {
+                    img.onerror = null;
+                    img.src = getKeywordPhoto(name);
+                }
+            };
+
+            function escHtml(s) {
+                return String(s || "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+
+            function renderAnalyticsMenu() {
+                var grid = document.getElementById("analytics-menu-grid");
+                var countEl = document.getElementById("analytics-menu-count");
+                if (!grid) return;
+
+                var raw = window.localStorage.getItem("cv_menu_items");
+                var items = [];
+                try { items = raw ? JSON.parse(raw) : []; } catch (_) { items = []; }
+                if (!Array.isArray(items)) items = [];
+
+                if (countEl) countEl.textContent = String(items.length);
+
+                if (!items.length) {
+                    grid.innerHTML = '<p class="muted-help">No menu items found. Add items on the Order page first.</p>';
+                    return;
+                }
+
+                grid.innerHTML = items.map(function (item) {
+                    var slug = nameToSlug(item.name);
+                    // Start with local jpg; cascade handles remaining extensions then keyword URL
+                    var primarySrc = "photos/" + slug + ".jpg";
+                    return [
+                        '<div class="analytics-menu-card">',
+                        '<img class="analytics-menu-photo" src="' + escHtml(primarySrc) + '" data-item-name="' + escHtml(item.name) + '" alt="' + escHtml(item.name) + '" loading="lazy" onerror="window.cvAnalyticsPhotoFallback(this,0)">',
+                        '<div class="analytics-menu-info">',
+                        '<strong>' + escHtml(item.name) + '</strong>',
+                        '<span>₹' + Number(item.price || 0).toFixed(2) + '</span>',
+                        '</div>',
+                        '</div>'
+                    ].join("");
+                }).join("");
+            }
+
+            // Re-render when config panel becomes visible
+            var configBtn = document.getElementById("show-config-panel-btn");
+            if (configBtn) {
+                configBtn.addEventListener("click", function () {
+                    setTimeout(renderAnalyticsMenu, 50);
+                });
+            }
+
+            // Re-render whenever the analytics panel becomes visible
+            var analyticsBtn = document.getElementById("show-analytics-panel-btn");
+            if (analyticsBtn) {
+                analyticsBtn.addEventListener("click", function () {
+                    setTimeout(renderAnalyticsMenu, 50);
+                });
+            }
+
+            renderAnalyticsMenu();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Vibes | Home</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+        :root {
+            --ink: #fdf2e4;
+            --muted: #ddc0a1;
+            --card: rgba(46, 30, 20, 0.92);
+            --border: rgba(191, 141, 93, 0.34);
+            --shadow: 0 24px 50px rgba(26, 14, 8, 0.58);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            min-height: 100vh;
+            color: var(--ink);
+            background:
+                radial-gradient(1100px 700px at -10% -10%, rgba(161, 88, 44, 0.38), transparent 58%),
+                radial-gradient(1000px 680px at 105% 90%, rgba(215, 154, 84, 0.32), transparent 54%),
+                linear-gradient(145deg, #23160f 0%, #342218 46%, #452f1f 100%);
+            padding: 20px;
+        }
+
+        body.is-navigating {
+            overflow: hidden;
+        }
+
+        .page-shell {
+            max-width: 1320px;
+            margin: 0 auto;
+            min-height: calc(100vh - 40px);
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            background: linear-gradient(140deg, rgba(36, 23, 16, 0.96), rgba(56, 36, 24, 0.93));
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            perspective: 1600px;
+        }
+
+        .hero-pane {
+            padding: 40px;
+            background:
+                linear-gradient(165deg, rgba(61, 34, 21, 0.86), rgba(103, 57, 32, 0.82)),
+                url('https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1400&q=80') center/cover;
+            color: #fff8f2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            isolation: isolate;
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 700ms ease;
+        }
+
+        .hero-pane::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 82% 20%, rgba(255, 214, 158, 0.3), transparent 42%),
+                radial-gradient(circle at 12% 88%, rgba(178, 100, 52, 0.3), transparent 40%);
+            z-index: -1;
+        }
+
+        .hero-pane::before {
+            content: "Opening Dashboard...";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: clamp(1.35rem, 2.3vw, 2rem);
+            letter-spacing: 0.02em;
+            color: rgba(255, 242, 228, 0.94);
+            background: linear-gradient(150deg, rgba(54, 30, 18, 0.95), rgba(93, 52, 27, 0.94));
+            opacity: 0;
+            transition: opacity 360ms ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: rgba(255, 251, 245, 0.92);
+            padding: 8px;
+        }
+
+        .brand-copy h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: clamp(2rem, 3vw, 2.8rem);
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
+
+        .brand-copy p {
+            font-size: 0.88rem;
+            color: rgba(255, 232, 205, 0.86);
+            margin-top: 6px;
+        }
+
+        .hero-copy {
+            margin-top: 40px;
+            max-width: 520px;
+        }
+
+        .hero-copy h2 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: clamp(1.7rem, 3vw, 2.45rem);
+            font-weight: 700;
+            line-height: 1.18;
+            margin-bottom: 14px;
+        }
+
+        .hero-copy p {
+            color: rgba(255, 237, 216, 0.9);
+            line-height: 1.65;
+            font-size: 0.95rem;
+        }
+
+        .hero-badges {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .hero-badge {
+            border: 1px solid rgba(228, 179, 131, 0.56);
+            background: rgba(196, 131, 74, 0.28);
+            color: #fff0dd;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        .login-pane {
+            padding: 40px 38px;
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            width: min(560px, 100%);
+            min-height: clamp(360px, 65vh, 520px);
+            border-radius: 24px;
+            border: 1px solid rgba(191, 134, 84, 0.44);
+            background: linear-gradient(180deg, rgba(70, 45, 30, 0.92), rgba(42, 26, 18, 0.94));
+            box-shadow: 0 18px 34px rgba(8, 12, 20, 0.42);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1), opacity 700ms ease;
+        }
+
+        .login-head h3 {
+            font-family: 'Fraunces', Georgia, serif;
+            color: #fff2e0;
+            font-size: 1.75rem;
+            margin-bottom: 6px;
+        }
+
+        .login-head p {
+            color: var(--muted);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .role-list {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .role-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(213, 159, 111, 0.5);
+            padding: 14px 16px;
+            font-weight: 700;
+            font-size: 1rem;
+            min-height: 72px;
+            transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+            animation: tile-float 3.6s ease-in-out infinite;
+        }
+
+        .role-btn::before {
+            content: "";
+            position: absolute;
+            inset: -120% -30%;
+            background: linear-gradient(120deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0));
+            transform: translateX(-120%) rotate(8deg);
+            transition: transform 620ms ease;
+            z-index: -1;
+        }
+
+        .role-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px rgba(4, 10, 20, 0.4);
+            border-color: rgba(243, 190, 143, 0.72);
+        }
+
+        .role-btn:hover::before {
+            transform: translateX(125%) rotate(8deg);
+        }
+
+        .role-btn-admin {
+            animation-delay: 0s;
+        }
+
+        .role-btn-user {
+            animation-delay: 0.35s;
+        }
+
+        @keyframes tile-float {
+            0%,
+            100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .page-shell.is-navigating .login-card {
+            transform: translateX(125%) rotate(8deg);
+            opacity: 0;
+        }
+
+        .page-shell.is-navigating .hero-pane {
+            transform: rotateY(-88deg) scale(0.98);
+            filter: brightness(1.08);
+        }
+
+        .page-shell.is-navigating .hero-pane::before {
+            opacity: 1;
+        }
+
+        .role-btn-admin {
+            background: linear-gradient(135deg, #f8e7d3, #e4c29b);
+            color: #4a2a16;
+            border-color: rgba(237, 194, 150, 0.95);
+        }
+
+        .role-btn-user {
+            background: linear-gradient(135deg, #7a4d2f, #9a623d);
+            color: #fff8f2;
+        }
+
+        .hint {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(201, 146, 98, 0.46);
+            color: var(--muted);
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+
+        .creator-logo {
+            margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .creator-wordmark {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #f2d2ac;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 920px) {
+            .page-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-pane {
+                min-height: 330px;
+                padding: 26px;
+            }
+
+            .hero-copy {
+                margin-top: 24px;
+            }
+
+            .login-pane {
+                padding: 26px;
+            }
+
+            .login-card {
+                min-height: auto;
+            }
+
+            .role-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body { padding: 12px; }
+            .page-shell { min-height: calc(100vh - 24px); border-radius: 18px; }
+            .hero-pane { padding: 20px; }
+            .brand-logo { width: 58px; height: 58px; }
+            .login-card { padding: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="page-shell" aria-label="Cafe Vibes login home">
+        <section class="hero-pane">
+            <div class="brand">
+                <img src="Logo.png" alt="Cafe Vibes Logo" class="brand-logo">
+                <div class="brand-copy">
+                    <h1>Cafe Vibes</h1>
+                    <p>...A Space For Every Story...</p>
+                </div>
+            </div>
+
+            <div class="hero-copy">
+                <h2>Warm service starts with a simple login.</h2>
+                <p>Access daily ordering for counter staff or open the analytics desk for management. Built for fast handoff, clear billing, and smooth customer flow.</p>
+            </div>
+        </section>
+
+        <section class="login-pane">
+            <div class="login-card">
+                <div class="login-head">
+                    <h3>Welcome To Cafe Vibes</h3>
+                    <p>Choose your role to continue.</p>
+                </div>
+                <div class="role-list">
+                    <a class="role-btn role-btn-admin" href="business-analytics.html">
+                        <span>Admin</span>
+                    </a>
+                    <a class="role-btn role-btn-user" href="order.html">
+                        <span>User</span>
+                    </a>
+                </div>
+                <p class="hint">Tip: Use New Order for billing and Analytics for configuration plus business summary.</p>
+                <div class="creator-logo" aria-label="Creator logo">
+                    <span class="creator-wordmark">Developed by Paras Veer</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (function () {
+            var pageShell = document.querySelector('.page-shell');
+            var adminBtn = document.querySelector('.role-btn-admin');
+            var userBtn = document.querySelector('.role-btn-user');
+
+            function getAdminPassword() {
+                var fallbackPassword = 'admin123';
+
+                try {
+                    var settingsRaw = window.localStorage.getItem('cv_settings');
+                    var settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+                    if (settings && typeof settings.adminPassword === 'string' && settings.adminPassword.trim()) {
+                        return settings.adminPassword.trim();
+                    }
+                } catch (_error) {
+                    return fallbackPassword;
+                }
+
+                return fallbackPassword;
+            }
+
+            function runLaunchAnimation(targetHref) {
+                if (!targetHref || document.body.classList.contains('is-navigating')) {
+                    return;
+                }
+
+                document.body.classList.add('is-navigating');
+
+                if (pageShell) {
+                    pageShell.classList.add('is-navigating');
+                }
+
+                window.setTimeout(function () {
+                    window.location.href = targetHref;
+                }, 700);
+            }
+
+            function onRoleClick(event) {
+                event.preventDefault();
+
+                var link = event.currentTarget;
+                var href = link.getAttribute('href');
+
+                if (link.classList.contains('role-btn-admin')) {
+                    var entered = window.prompt('Enter admin password:');
+                    if (entered === null) {
+                        return;
+                    }
+                    if (entered !== getAdminPassword()) {
+                        window.alert('Incorrect password. Access denied.');
+                        return;
+                    }
+                }
+
+                runLaunchAnimation(href);
+            }
+
+            [adminBtn, userBtn].forEach(function (button) {
+                if (button) {
+                    button.addEventListener('click', onRoleClick);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
