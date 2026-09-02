@@ -98,9 +98,7 @@
     var pageState = {
         menuItems: [],
         cart: {},
-        filteredQuery: "",
-        selectedMenuPhoto: null,
-        scannedItems: []
+        filteredQuery: ""
     };
 
     function safeParse(json, fallback) {
@@ -171,7 +169,6 @@
 
         var phoneEl = document.getElementById("cust-phone");
         var nameEl = document.getElementById("cust-name");
-        var tableEl = document.getElementById("bill-table");
         var paymentTypeEl = document.getElementById("payment-type");
 
         if (phoneEl) {
@@ -180,37 +177,45 @@
         if (nameEl) {
             nameEl.value = profile.name || "";
         }
-        if (tableEl && profile.table) {
-            tableEl.value = profile.table;
-        }
         if (paymentTypeEl && profile.paymentType) {
             paymentTypeEl.value = profile.paymentType;
         }
+    }
 
-        updateUpiLinks();
+    function customerLabel(profile) {
+        var name = profile.name || "Customer";
+        var phone = profile.phone || "";
+        return name + (phone ? (" (" + phone + ")") : "");
+    }
+
+    // Resolves what the user typed (label, plain name or phone) to a saved profile
+    function findCustomerByText(text) {
+        var query = String(text || "").trim().toLowerCase();
+        if (!query) {
+            return null;
+        }
+
+        var digits = query.replace(/\D/g, "");
+        var customers = getRegularCustomers();
+        var match = customers.find(function (profile) {
+            return customerLabel(profile).toLowerCase() === query ||
+                String(profile.name || "").trim().toLowerCase() === query ||
+                (digits && profile.id === digits);
+        });
+
+        return match || null;
     }
 
     function renderRegularCustomers() {
-        var selectEl = document.getElementById("regular-customer-select");
-        if (!selectEl) {
+        var inputEl = document.getElementById("regular-customer-select");
+        var listEl = document.getElementById("regular-customer-options");
+        if (!inputEl || !listEl) {
             return;
         }
 
-        var customers = getRegularCustomers();
-        var previous = selectEl.value || "";
-
-        var options = ['<option value="">Select saved customer</option>'];
-        customers.forEach(function (profile) {
-            var name = profile.name || "Customer";
-            var phone = profile.phone || "";
-            var label = name + (phone ? (" (" + phone + ")") : "");
-            options.push('<option value="' + escapeHtml(profile.id) + '">' + escapeHtml(label) + "</option>");
-        });
-        selectEl.innerHTML = options.join("");
-
-        if (previous && customers.some(function (profile) { return profile.id === previous; })) {
-            selectEl.value = previous;
-        }
+        listEl.innerHTML = getRegularCustomers().map(function (profile) {
+            return '<option value="' + escapeHtml(customerLabel(profile)) + '"></option>';
+        }).join("");
     }
 
     function getSettings() {
@@ -219,23 +224,6 @@
 
     function saveSettings(settings) {
         writeStorage(STORAGE_KEYS.settings, settings);
-    }
-
-    function updateOrderStats() {
-        var salesEl = document.getElementById("stat-sales");
-        var costEl = document.getElementById("stat-cost");
-        var profitEl = document.getElementById("stat-profit");
-
-        if (!salesEl || !costEl || !profitEl) {
-            return;
-        }
-
-        var totals = cartTotals();
-        salesEl.textContent = currency(totals.total);
-        costEl.textContent = currency(totals.cost);
-        profitEl.textContent = currency(totals.total - totals.cost);
-        profitEl.classList.toggle("profit", totals.total - totals.cost >= 0);
-        profitEl.classList.toggle("loss", totals.total - totals.cost < 0);
     }
 
     function cartTotals() {
@@ -438,8 +426,6 @@
             if (itemCountEl) {
                 itemCountEl.textContent = "0";
             }
-            updateOrderStats();
-            updateUpiLinks();
             return;
         }
 
@@ -491,9 +477,6 @@
                 }
             });
         });
-
-        updateOrderStats();
-        updateUpiLinks();
     }
 
     function updateCart(itemId, delta) {
@@ -625,7 +608,6 @@
                     saveHoldOrders(list);
                     renderCart();
                     renderHoldOrders();
-                    updateUpiLinks();
                     return;
                 }
 
@@ -765,54 +747,6 @@
         }
     }
 
-    function buildUpiLink() {
-        var settings = getSettings();
-        var upiId = settings.upiId || "";
-        var total = cartTotals().total;
-
-        if (!upiId.trim()) {
-            return "";
-        }
-
-        return "upi://pay?pa=" + encodeURIComponent(upiId.trim()) +
-            "&pn=" + encodeURIComponent(BUSINESS_NAME) +
-            "&am=" + encodeURIComponent(total.toFixed(2)) +
-            "&cu=INR";
-    }
-
-    function updateUpiLinks() {
-        var upiLinkEl = document.getElementById("upi-pay-link");
-        var upiQrEl = document.getElementById("upi-qr-image");
-        var upiStatus = document.getElementById("upi-status");
-        var deliveryPaymentBox = document.getElementById("delivery-payment-box");
-        var tableEl = document.getElementById("bill-table");
-
-        if (!deliveryPaymentBox || !tableEl) {
-            return;
-        }
-
-        var isTakeaway = tableEl.value === "Takeaway";
-        deliveryPaymentBox.classList.toggle("hidden", !isTakeaway);
-
-        if (!isTakeaway || !upiLinkEl || !upiQrEl || !upiStatus) {
-            return;
-        }
-
-        var upiLink = buildUpiLink();
-        if (!upiLink) {
-            upiLinkEl.style.display = "none";
-            upiQrEl.style.display = "none";
-            upiStatus.textContent = "Add your UPI ID to enable payment link and QR.";
-            return;
-        }
-
-        upiLinkEl.href = upiLink;
-        upiLinkEl.style.display = "inline-flex";
-        upiQrEl.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(upiLink);
-        upiQrEl.style.display = "block";
-        upiStatus.textContent = "UPI payment link and QR generated.";
-    }
-
     function saveOrderAndClear(orderMessage, metadata) {
         var totals = cartTotals();
         var now = new Date();
@@ -861,7 +795,6 @@
         var totals = cartTotals();
         var now = new Date();
         var orderId = "ORD-" + now.getTime().toString().slice(-6);
-        var upiLink = buildUpiLink() || "N/A";
         var billItems = buildBillItemsLines();
 
         var template = getHardcodedWhatsAppTemplate(language, table);
@@ -872,8 +805,7 @@
             .replaceAll("{{bill_items}}", billItems)
             .replaceAll("{{order_total}}", currency(totals.total))
             .replaceAll("{{order_time}}", now.toLocaleString())
-            .replaceAll("{{order_id}}", orderId)
-            .replaceAll("{{upi_link}}", upiLink) + "\n*Payment Type:* " + paymentType;
+            .replaceAll("{{order_id}}", orderId) + "\n*Payment Type:* " + paymentType;
 
         var waUrl = "https://wa.me/" + rawPhone + "?text=" + encodeURIComponent(message);
         window.open(waUrl, "_blank", "noopener");
@@ -1024,14 +956,6 @@
     function setupOrderEvents() {
         var menuSearchInput = document.getElementById("menu-search-input");
         var clearSearchBtn = document.getElementById("clear-menu-search-btn");
-        var toggleMenuToolsBtn = document.getElementById("toggle-menu-tools-btn");
-        var menuToolsPanel = document.getElementById("menu-tools-panel");
-        var addManualItemBtn = document.getElementById("add-manual-item-btn");
-        var choosePhotoBtn = document.getElementById("choose-menu-photo-btn");
-        var menuPhotoInput = document.getElementById("menu-photo-input");
-        var scanPhotoBtn = document.getElementById("scan-menu-photo-btn");
-        var importScannedBtn = document.getElementById("import-scanned-items-btn");
-        var tableSelect = document.getElementById("bill-table");
         var savedCustomerSelect = document.getElementById("regular-customer-select");
         var saveCustomerBtn = document.getElementById("save-regular-customer-btn");
         var removeCustomerBtn = document.getElementById("remove-regular-customer-btn");
@@ -1053,79 +977,9 @@
             });
         }
 
-        if (toggleMenuToolsBtn && menuToolsPanel) {
-            toggleMenuToolsBtn.addEventListener("click", function () {
-                menuToolsPanel.classList.toggle("hidden");
-            });
-        }
-
-        if (addManualItemBtn) {
-            addManualItemBtn.addEventListener("click", function () {
-                var nameInput = document.getElementById("manual-item-name");
-                var priceInput = document.getElementById("manual-item-price");
-                var name = (nameInput && nameInput.value || "").trim();
-                var price = Number(priceInput && priceInput.value || 0);
-
-                if (!name || !(price > 0)) {
-                    window.alert("Enter valid item name and price.");
-                    return;
-                }
-
-                var id = slug(name) + "-" + Date.now();
-                pageState.menuItems.push({
-                    id: id,
-                    name: name,
-                    price: price,
-                    cost: Number((price * 0.35).toFixed(2))
-                });
-                writeStorage(STORAGE_KEYS.menu, pageState.menuItems);
-                renderMenu();
-
-                if (nameInput) {
-                    nameInput.value = "";
-                }
-                if (priceInput) {
-                    priceInput.value = "";
-                }
-            });
-        }
-
-        if (choosePhotoBtn && menuPhotoInput) {
-            choosePhotoBtn.addEventListener("click", function () {
-                menuPhotoInput.click();
-            });
-
-            menuPhotoInput.addEventListener("change", function () {
-                var nameTag = document.getElementById("menu-photo-name");
-                pageState.selectedMenuPhoto = menuPhotoInput.files && menuPhotoInput.files[0] ? menuPhotoInput.files[0] : null;
-                if (nameTag) {
-                    nameTag.textContent = pageState.selectedMenuPhoto ? pageState.selectedMenuPhoto.name : "No photo selected";
-                }
-            });
-        }
-
-        if (scanPhotoBtn) {
-            scanPhotoBtn.addEventListener("click", scanMenuPhoto);
-        }
-
-        if (importScannedBtn) {
-            importScannedBtn.addEventListener("click", importScannedItems);
-        }
-
-        if (tableSelect) {
-            tableSelect.addEventListener("change", updateUpiLinks);
-        }
-
         if (savedCustomerSelect) {
-            savedCustomerSelect.addEventListener("change", function () {
-                var selectedId = savedCustomerSelect.value;
-                if (!selectedId) {
-                    return;
-                }
-                var selectedProfile = getRegularCustomers().find(function (profile) {
-                    return profile.id === selectedId;
-                });
-                applyRegularCustomerProfile(selectedProfile);
+            savedCustomerSelect.addEventListener("input", function () {
+                applyRegularCustomerProfile(findCustomerByText(savedCustomerSelect.value));
             });
         }
 
@@ -1133,7 +987,6 @@
             saveCustomerBtn.addEventListener("click", function () {
                 var phoneEl = document.getElementById("cust-phone");
                 var nameEl = document.getElementById("cust-name");
-                var tableEl = document.getElementById("bill-table");
                 var paymentTypeEl = document.getElementById("payment-type");
 
                 var rawPhone = (phoneEl && phoneEl.value ? phoneEl.value : "").trim();
@@ -1153,7 +1006,6 @@
                     id: digits,
                     phone: rawPhone,
                     name: name,
-                    table: (tableEl && tableEl.value) || "Takeaway",
                     paymentType: (paymentTypeEl && paymentTypeEl.value) || "Cash",
                     updatedAt: new Date().toISOString()
                 };
@@ -1166,7 +1018,7 @@
                 renderRegularCustomers();
 
                 if (savedCustomerSelect) {
-                    savedCustomerSelect.value = profile.id;
+                    savedCustomerSelect.value = customerLabel(profile);
                 }
                 window.alert("Regular customer saved.");
             });
@@ -1174,141 +1026,21 @@
 
         if (removeCustomerBtn) {
             removeCustomerBtn.addEventListener("click", function () {
-                if (!savedCustomerSelect || !savedCustomerSelect.value) {
-                    window.alert("Select a saved customer to remove.");
+                var selectedProfile = savedCustomerSelect ? findCustomerByText(savedCustomerSelect.value) : null;
+                if (!selectedProfile) {
+                    window.alert("Type or pick a saved customer to remove.");
                     return;
                 }
 
-                var selectedId = savedCustomerSelect.value;
                 var customers = getRegularCustomers().filter(function (entry) {
-                    return entry.id !== selectedId;
+                    return entry.id !== selectedProfile.id;
                 });
                 saveRegularCustomers(customers);
+                savedCustomerSelect.value = "";
                 renderRegularCustomers();
                 window.alert("Saved customer removed.");
             });
         }
-
-    }
-
-    function parseScannedMenuText(text) {
-        var results = [];
-        String(text || "")
-            .split(/\r?\n/)
-            .forEach(function (line) {
-                var match = line.match(/([A-Za-z][A-Za-z0-9 &\\-]{1,40})\s+(\d+(?:\.\d{1,2})?)/);
-                if (!match) {
-                    return;
-                }
-                var name = match[1].trim();
-                var price = Number(match[2]);
-                if (!(price > 0)) {
-                    return;
-                }
-                results.push({ name: name, price: price });
-            });
-
-        var dedup = [];
-        var seen = {};
-        results.forEach(function (item) {
-            var key = item.name.toLowerCase();
-            if (!seen[key]) {
-                seen[key] = true;
-                dedup.push(item);
-            }
-        });
-        return dedup;
-    }
-
-    function renderScannedItems() {
-        var body = document.getElementById("scan-results-body");
-        if (!body) {
-            return;
-        }
-
-        if (!pageState.scannedItems.length) {
-            body.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:14px;">No scanned items yet.</td></tr>';
-            return;
-        }
-
-        body.innerHTML = pageState.scannedItems.map(function (item, index) {
-            return [
-                "<tr>",
-                "<td><input type=\"checkbox\" class=\"scan-add\" data-scan-index=\"" + index + "\" checked></td>",
-                "<td>" + escapeHtml(item.name) + "</td>",
-                "<td>" + currency(item.price) + "</td>",
-                "</tr>"
-            ].join("");
-        }).join("");
-    }
-
-    function scanMenuPhoto() {
-        var status = document.getElementById("scan-status");
-        if (!pageState.selectedMenuPhoto) {
-            if (status) {
-                status.textContent = "Please upload a photo first.";
-            }
-            return;
-        }
-
-        if (!window.Tesseract || !window.Tesseract.recognize) {
-            if (status) {
-                status.textContent = "Photo scan engine is unavailable. Ensure internet is available and reload page.";
-            }
-            return;
-        }
-
-        if (status) {
-            status.textContent = "Scanning photo...";
-        }
-
-        window.Tesseract.recognize(pageState.selectedMenuPhoto, "eng")
-            .then(function (result) {
-                var scanned = parseScannedMenuText(result && result.data ? result.data.text : "");
-                pageState.scannedItems = scanned;
-                renderScannedItems();
-                if (status) {
-                    status.textContent = scanned.length ? ("Scan complete. Found " + scanned.length + " items.") : "Scan complete, but no item+price pairs were found.";
-                }
-            })
-            .catch(function () {
-                if (status) {
-                    status.textContent = "Failed to scan image.";
-                }
-            });
-    }
-
-    function importScannedItems() {
-        var checks = Array.prototype.slice.call(document.querySelectorAll(".scan-add:checked"));
-        if (!checks.length) {
-            window.alert("No scanned items selected.");
-            return;
-        }
-
-        var added = 0;
-        checks.forEach(function (check) {
-            var index = Number(check.getAttribute("data-scan-index"));
-            var item = pageState.scannedItems[index];
-            if (!item) {
-                return;
-            }
-            var exists = pageState.menuItems.some(function (menuItem) {
-                return menuItem.name.toLowerCase() === item.name.toLowerCase();
-            });
-            if (!exists) {
-                pageState.menuItems.push({
-                    id: slug(item.name) + "-" + Date.now() + "-" + index,
-                    name: item.name,
-                    price: item.price,
-                    cost: Number((item.price * 0.35).toFixed(2))
-                });
-                added += 1;
-            }
-        });
-
-        writeStorage(STORAGE_KEYS.menu, pageState.menuItems);
-        renderMenu();
-        window.alert(added + " scanned item(s) added to menu.");
     }
 
     function setupOrderPage() {
@@ -1318,7 +1050,6 @@
         renderCart();
         renderRegularCustomers();
         renderHoldOrders();
-        updateUpiLinks();
         updateAnalyticsSummary();
     }
 
@@ -1392,12 +1123,10 @@
 
     function loadAdminSettingsForm() {
         var settings = getSettings();
-        var upiIdInput = document.getElementById("admin-upi-id");
         var languageSelect = document.getElementById("admin-message-language");
         var passwordInput = document.getElementById("admin-password");
         var passwordConfirmInput = document.getElementById("admin-password-confirm");
 
-        if (upiIdInput) { upiIdInput.value = settings.upiId || ""; }
         if (languageSelect) { languageSelect.value = settings.language || "en"; }
         if (passwordInput) { passwordInput.value = ""; }
         if (passwordConfirmInput) { passwordConfirmInput.value = ""; }
@@ -1476,49 +1205,13 @@
 
         if (importMenuBtn) {
             importMenuBtn.addEventListener("click", function () {
-                if (!ensureXlsxReady()) {
-                    return;
-                }
-
-                var picker = document.createElement("input");
-                picker.type = "file";
-                picker.accept = ".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-
-                picker.addEventListener("change", function () {
-                    var file = picker.files && picker.files[0];
-                    if (!file) {
-                        return;
-                    }
-
-                    var reader = new FileReader();
-                    reader.onload = function () {
-                        try {
-                            var workbook = window.XLSX.read(reader.result, { type: "array" });
-                            var importedMenuItems = parseMenuExcelWorkbook(workbook);
-                            if (!importedMenuItems.length) {
-                                updateAdminStatus("admin-menu-status", "Invalid menu Excel file. Include item name and price columns.");
-                                return;
-                            }
-
-                            mergeMenuItems(importedMenuItems);
-                            renderAdminMenuList();
-                            updateAdminStatus("admin-menu-status", "Menu imported successfully from Excel.");
-                        } catch (_error) {
-                            updateAdminStatus("admin-menu-status", "Failed to import menu file.");
-                        }
-                    };
-                    reader.readAsArrayBuffer(file);
-                });
-
-                picker.click();
+                window.importDataWorkbook();
             });
         }
 
         if (saveSettingsBtn) {
             saveSettingsBtn.addEventListener("click", function () {
                 var settings = getSettings();
-                var upiIdInput = document.getElementById("admin-upi-id");
-                settings.upiId = upiIdInput ? upiIdInput.value.trim() : "";
                 settings.language = languageSelect ? languageSelect.value : "en";
                 saveSettings(settings);
                 updateAdminStatus("admin-settings-status", "Settings saved.");
@@ -1681,6 +1374,120 @@
         }).join("");
     }
 
+    var dashboardCharts = {};
+
+    function toggleChartEmpty(emptyId, isEmpty) {
+        var el = document.getElementById(emptyId);
+        if (el) { el.classList.toggle("hidden", !isEmpty); }
+    }
+
+    function drawChart(canvasId, emptyId, config, hasData) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) { return; }
+
+        if (dashboardCharts[canvasId]) {
+            dashboardCharts[canvasId].destroy();
+            delete dashboardCharts[canvasId];
+        }
+
+        toggleChartEmpty(emptyId, !hasData);
+        canvas.classList.toggle("hidden", !hasData);
+        if (!hasData) { return; }
+
+        dashboardCharts[canvasId] = new window.Chart(canvas.getContext("2d"), config);
+    }
+
+    function getTopSellingItems(limit) {
+        var totals = {};
+        getOrders().forEach(function (order) {
+            (order.items || []).forEach(function (item) {
+                var name = item.name || "Item";
+                totals[name] = (totals[name] || 0) + Number(item.qty || 0);
+            });
+        });
+        return Object.keys(totals)
+            .map(function (name) { return { name: name, qty: totals[name] }; })
+            .filter(function (entry) { return entry.qty > 0; })
+            .sort(function (a, b) { return b.qty - a.qty; })
+            .slice(0, limit);
+    }
+
+    function renderDashboardCharts() {
+        if (!window.Chart || !document.getElementById("chart-monthly-performance")) { return; }
+
+        var monthRows = buildMasterRows().slice(-12);
+        drawChart("chart-monthly-performance", "chart-monthly-empty", {
+            type: "bar",
+            data: {
+                labels: monthRows.map(function (row) { return row.Month; }),
+                datasets: [
+                    { label: "Sales", data: monthRows.map(function (row) { return row.Sales; }), backgroundColor: "rgba(37, 99, 235, 0.75)", borderRadius: 6 },
+                    { label: "Total Cost", data: monthRows.map(function (row) { return row["Total Cost"]; }), backgroundColor: "rgba(239, 68, 68, 0.75)", borderRadius: 6 },
+                    { label: "Net Profit", type: "line", data: monthRows.map(function (row) { return row["Net Profit"]; }), borderColor: "#16a34a", backgroundColor: "rgba(22, 163, 74, 0.15)", tension: 0.35, fill: true, pointRadius: 4 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: "bottom" } },
+                scales: { y: { beginAtZero: true, ticks: { callback: function (value) { return "\u20b9" + value; } } } }
+            }
+        }, monthRows.length > 0);
+
+        var dailyCosts = getDailyCosts();
+        var costTotals = { dairy: 0, veggies: 0, raw: 0, misc: 0 };
+        Object.keys(dailyCosts).forEach(function (date) {
+            var entry = dailyCosts[date];
+            costTotals.dairy += Number(entry.dairy || 0);
+            costTotals.veggies += Number(entry.veggies || 0);
+            costTotals.raw += Number(entry.raw || 0);
+            costTotals.misc += Number(entry.misc || 0);
+        });
+        var monthlyFixed = getMonthlyFixed();
+        var fixedTotal = Object.keys(monthlyFixed).reduce(function (sum, month) {
+            var m = monthlyFixed[month];
+            return sum + Number(m.electricity || 0) + Number(m.water || 0) + Number(m.staff || 0) + Number(m.gas || 0);
+        }, 0);
+
+        var costValues = [costTotals.dairy, costTotals.veggies, costTotals.raw, costTotals.misc, fixedTotal];
+        drawChart("chart-cost-split", "chart-cost-empty", {
+            type: "doughnut",
+            data: {
+                labels: ["Dairy", "Veggies", "Raw Materials", "Miscellaneous", "Fixed Charges"],
+                datasets: [{
+                    data: costValues,
+                    backgroundColor: ["#60a5fa", "#34d399", "#fbbf24", "#a78bfa", "#f87171"],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: "58%",
+                plugins: {
+                    legend: { position: "bottom" },
+                    tooltip: { callbacks: { label: function (ctx) { return ctx.label + ": " + currency(ctx.parsed); } } }
+                }
+            }
+        }, costValues.some(function (value) { return value > 0; }));
+
+        var topItems = getTopSellingItems(8);
+        drawChart("chart-top-items", "chart-items-empty", {
+            type: "bar",
+            data: {
+                labels: topItems.map(function (entry) { return entry.name; }),
+                datasets: [{ label: "Qty Sold", data: topItems.map(function (entry) { return entry.qty; }), backgroundColor: "rgba(217, 119, 6, 0.8)", borderRadius: 6 }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        }, topItems.length > 0);
+    }
+
     function updateAnalyticsSummary() {
         var totalSalesEl = document.getElementById("summary-total-sales");
         var totalItemsEl = document.getElementById("summary-total-items");
@@ -1715,6 +1522,7 @@
             netProfitEl.classList.toggle("loss", netProfit < 0);
         }
         renderMasterDashboard();
+        renderDashboardCharts();
     }
 
     function setupAdminPanelToggle() {
@@ -1904,45 +1712,100 @@
     window.closeTodayOrdersSummaryPopup = closeTodayOrdersSummaryPopup;
     window.downloadLastBillImage = downloadLastBillImage;
 
-    window.exportDailyLog = function () {
-        if (!ensureXlsxReady()) { return; }
+    // ── Data workbook: full backup / restore of analytics + configuration ───────
+    var DATA_SHEETS = {
+        daily: "Daily_Entry",
+        monthly: "Monthly_Fixed_Cost",
+        master: "Master_Dashboard",
+        orders: "Orders",
+        customers: "Regular Customers",
+        menu: "Menu_Items",
+        settings: "Settings"
+    };
+
+    // Accepted sheet titles per data type, so hand-made workbooks also import
+    var SHEET_ALIASES = {
+        daily: [DATA_SHEETS.daily, "daily entry", "buisness data per day", "business data per day", "daily data", "per day"],
+        monthly: [DATA_SHEETS.monthly, "monthly fixed cost", "buisness data per month", "business data per month", "monthly data", "per month"],
+        orders: [DATA_SHEETS.orders, "order log", "sales"],
+        customers: [DATA_SHEETS.customers, "regular customers", "saved customers", "customers"],
+        menu: [DATA_SHEETS.menu, "menu items", "menu"],
+        settings: [DATA_SHEETS.settings, "configuration", "config"]
+    };
+
+    function normalizeSheetName(name) {
+        return String(name || "").trim().toLowerCase().replace(/[_\s-]+/g, " ");
+    }
+
+    function findSheetName(workbook, type) {
+        var aliases = (SHEET_ALIASES[type] || []).map(normalizeSheetName);
+        var names = (workbook && workbook.SheetNames) || [];
+        for (var i = 0; i < names.length; i += 1) {
+            if (aliases.indexOf(normalizeSheetName(names[i])) !== -1) {
+                return names[i];
+            }
+        }
+        return "";
+    }
+
+    function pickField(row, keys) {
+        for (var i = 0; i < keys.length; i += 1) {
+            if (row[keys[i]] != null && String(row[keys[i]]).trim() !== "") {
+                return row[keys[i]];
+            }
+        }
+        return "";
+    }
+
+    function pad2(value) {
+        return (value < 10 ? "0" : "") + value;
+    }
+
+    function toDateKey(value) {
+        if (value instanceof Date && !isNaN(value.getTime())) {
+            return value.getFullYear() + "-" + pad2(value.getMonth() + 1) + "-" + pad2(value.getDate());
+        }
+        var match = String(value || "").trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+        return match ? match[0] : "";
+    }
+
+    function toMonthKey(value) {
+        if (value instanceof Date && !isNaN(value.getTime())) {
+            return value.getFullYear() + "-" + pad2(value.getMonth() + 1);
+        }
+        var match = String(value || "").trim().match(/^(\d{4})-(\d{2})/);
+        return match ? match[0] : "";
+    }
+
+    function buildDailyRows() {
         var dailyCosts = getDailyCosts();
-        var rows = Object.keys(dailyCosts).sort().map(function (dateStr) {
+        return Object.keys(dailyCosts).sort().map(function (dateStr) {
             var d = dailyCosts[dateStr];
             var sales = getSalesForDate(dateStr);
             var dairy = Number(d.dairy || 0), veggies = Number(d.veggies || 0), raw = Number(d.raw || 0), misc = Number(d.misc || 0);
             var totalCost = dairy + veggies + raw + misc;
             return { Date: dateStr, Sales: sales, Dairy: dairy, Veggies: veggies, "Raw Materials": raw, Miscellaneous: misc, "Total Cost": totalCost, "Net Profit": sales - totalCost };
         });
-        if (!rows.length) { window.alert("No daily entries to export."); return; }
-        var wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), "Daily_Entry");
-        downloadWorkbook("cafe-vibes-daily-log.xlsx", wb);
-    };
+    }
 
-    window.exportMonthlyLog = function () {
-        if (!ensureXlsxReady()) { return; }
+    function buildMonthlyRows() {
         var monthlyFixed = getMonthlyFixed();
-        var rows = Object.keys(monthlyFixed).sort().map(function (monthStr) {
+        return Object.keys(monthlyFixed).sort().map(function (monthStr) {
             var m = monthlyFixed[monthStr];
             var elec = Number(m.electricity || 0), water = Number(m.water || 0), staff = Number(m.staff || 0), gas = Number(m.gas || 0);
             return { Month: monthStr, Electricity: elec, Water: water, Staff: staff, Gas: gas, "Total Fixed Cost": elec + water + staff + gas };
         });
-        if (!rows.length) { window.alert("No monthly fixed cost entries to export."); return; }
-        var wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), "Monthly_Fixed_Cost");
-        downloadWorkbook("cafe-vibes-monthly-costs.xlsx", wb);
-    };
+    }
 
-    window.exportMasterDashboard = function () {
-        if (!ensureXlsxReady()) { return; }
+    function buildMasterRows() {
         var months = {};
         getOrders().forEach(function (o) { var m = String(o.time || "").slice(0, 7); if (m) { months[m] = true; } });
         var dailyCosts = getDailyCosts();
         Object.keys(dailyCosts).forEach(function (d) { var m = d.slice(0, 7); if (m) { months[m] = true; } });
         var monthlyFixed = getMonthlyFixed();
         Object.keys(monthlyFixed).forEach(function (m) { if (m) { months[m] = true; } });
-        var rows = Object.keys(months).sort().map(function (monthStr) {
+
+        return Object.keys(months).sort().map(function (monthStr) {
             var sales = getSalesForMonth(monthStr);
             var items = getItemsForMonth(monthStr);
             var materialCost = Object.keys(dailyCosts).filter(function (d) { return d.slice(0, 7) === monthStr; })
@@ -1952,9 +1815,353 @@
             var totalCost = materialCost + fixedCost;
             return { Month: monthStr, Sales: sales, "Items Sold": items, "Material Cost": materialCost, "Fixed Cost": fixedCost, "Total Cost": totalCost, "Net Profit": sales - totalCost };
         });
+    }
+
+    // One row per order line so the sheet stays readable and re-importable
+    function buildOrderRows() {
+        var rows = [];
+        getOrders().forEach(function (order) {
+            var items = Array.isArray(order.items) && order.items.length ? order.items : [{ name: "", price: 0, qty: 0 }];
+            items.forEach(function (item) {
+                rows.push({
+                    "Order ID": order.id || "",
+                    "Date Time": order.time || "",
+                    Table: order.table || "",
+                    "Customer Name": order.customerName || "",
+                    "Customer Phone": order.customerPhone || "",
+                    "Payment Type": order.paymentType || "",
+                    Item: item.name || "",
+                    Qty: Number(item.qty || 0),
+                    Price: Number(item.price || 0),
+                    "Order Total": Number(order.total || 0),
+                    "Order Cost": Number(order.cost || 0)
+                });
+            });
+        });
+        return rows;
+    }
+
+    function buildCustomerRows() {
+        return getRegularCustomers().map(function (profile) {
+            return {
+                Name: profile.name || "",
+                Phone: profile.phone || "",
+                "Payment Type": profile.paymentType || "",
+                "Updated At": profile.updatedAt || ""
+            };
+        });
+    }
+
+    function buildMenuRows() {
+        return loadMenuItems().map(function (item) {
+            return { item_name: item.name, selling_price: Number(item.price || 0), raw_cost: Number(item.cost || 0) };
+        });
+    }
+
+    function buildSettingsRows() {
+        var settings = getSettings();
+        return [
+            { Setting: "Message Language", Value: settings.language || "en" }
+        ];
+    }
+
+    function appendSheet(workbook, name, rows) {
+        if (!rows.length) {
+            return;
+        }
+        window.XLSX.utils.book_append_sheet(workbook, window.XLSX.utils.json_to_sheet(rows), name);
+    }
+
+    window.exportDataWorkbook = function () {
+        if (!ensureXlsxReady()) { return; }
+
+        var wb = window.XLSX.utils.book_new();
+        appendSheet(wb, DATA_SHEETS.daily, buildDailyRows());
+        appendSheet(wb, DATA_SHEETS.monthly, buildMonthlyRows());
+        appendSheet(wb, DATA_SHEETS.customers, buildCustomerRows());
+        appendSheet(wb, DATA_SHEETS.orders, buildOrderRows());
+        appendSheet(wb, DATA_SHEETS.menu, buildMenuRows());
+        appendSheet(wb, DATA_SHEETS.settings, buildSettingsRows());
+
+        if (!wb.SheetNames.length) {
+            window.alert("Nothing to export yet.");
+            return;
+        }
+
+        downloadWorkbook("cafe-vibes-data-workbook.xlsx", wb);
+        updateAdminStatus("data-workbook-status", "Data workbook exported with " + wb.SheetNames.length + " sheet(s).");
+    };
+
+    function importDailySheet(workbook) {
+        var sheetName = findSheetName(workbook, "daily");
+        if (!sheetName) { return 0; }
+
+        var rows = sheetToObjects(workbook, sheetName);
+        var dailyCosts = getDailyCosts();
+        var count = 0;
+
+        rows.forEach(function (row) {
+            var dateStr = toDateKey(pickField(row, ["Date", "date", "DATE"]));
+            if (!dateStr) { return; }
+            dailyCosts[dateStr] = {
+                dairy: Number(pickField(row, ["Dairy", "dairy"]) || 0),
+                veggies: Number(pickField(row, ["Veggies", "veggies", "Vegetables"]) || 0),
+                raw: Number(pickField(row, ["Raw Materials", "raw", "Raw"]) || 0),
+                misc: Number(pickField(row, ["Miscellaneous", "misc", "Misc"]) || 0)
+            };
+            count += 1;
+        });
+
+        if (count) { saveDailyCosts(dailyCosts); }
+        return count;
+    }
+
+    function importMonthlySheet(workbook) {
+        var sheetName = findSheetName(workbook, "monthly");
+        if (!sheetName) { return 0; }
+
+        var rows = sheetToObjects(workbook, sheetName);
+        var monthlyFixed = getMonthlyFixed();
+        var count = 0;
+
+        rows.forEach(function (row) {
+            var monthStr = toMonthKey(pickField(row, ["Month", "month", "MONTH"]));
+            if (!monthStr) { return; }
+            monthlyFixed[monthStr] = {
+                electricity: Number(pickField(row, ["Electricity", "electricity"]) || 0),
+                water: Number(pickField(row, ["Water", "water"]) || 0),
+                staff: Number(pickField(row, ["Staff", "staff"]) || 0),
+                gas: Number(pickField(row, ["Gas", "gas"]) || 0)
+            };
+            count += 1;
+        });
+
+        if (count) { saveMonthlyFixed(monthlyFixed); }
+        return count;
+    }
+
+    function importOrdersSheet(workbook) {
+        var sheetName = findSheetName(workbook, "orders");
+        if (!sheetName) { return 0; }
+
+        var rows = sheetToObjects(workbook, sheetName);
+        if (!rows.length) { return 0; }
+
+        var grouped = {};
+        var order = [];
+
+        rows.forEach(function (row) {
+            var orderId = String(pickField(row, ["Order ID", "order_id", "id"]) || "").trim();
+            if (!orderId) { return; }
+
+            if (!grouped[orderId]) {
+                var timeValue = pickField(row, ["Date Time", "Time", "time"]);
+                grouped[orderId] = {
+                    id: orderId,
+                    time: timeValue instanceof Date ? timeValue.toISOString() : String(timeValue || ""),
+                    total: Number(pickField(row, ["Order Total", "total"]) || 0),
+                    cost: Number(pickField(row, ["Order Cost", "cost"]) || 0),
+                    table: String(pickField(row, ["Table", "table"]) || ""),
+                    customerName: String(pickField(row, ["Customer Name", "customerName"]) || ""),
+                    customerPhone: String(pickField(row, ["Customer Phone", "customerPhone"]) || ""),
+                    paymentType: String(pickField(row, ["Payment Type", "paymentType"]) || ""),
+                    items: []
+                };
+                order.push(orderId);
+            }
+
+            var itemName = String(pickField(row, ["Item", "item", "item_name"]) || "").trim();
+            if (itemName) {
+                grouped[orderId].items.push({
+                    itemId: slug(itemName),
+                    name: itemName,
+                    price: Number(pickField(row, ["Price", "price"]) || 0),
+                    qty: Number(pickField(row, ["Qty", "qty", "Quantity"]) || 0)
+                });
+            }
+        });
+
+        var existing = getOrders();
+        var seen = {};
+        existing.forEach(function (o) { seen[o.id] = true; });
+
+        var added = 0;
+        order.forEach(function (orderId) {
+            if (seen[orderId]) { return; }
+            existing.push(grouped[orderId]);
+            added += 1;
+        });
+
+        if (added) {
+            existing.sort(function (a, b) { return String(a.time).localeCompare(String(b.time)); });
+            saveOrders(existing);
+        }
+        return added;
+    }
+
+    function importCustomersSheet(workbook) {
+        var sheetName = findSheetName(workbook, "customers");
+        if (!sheetName) { return 0; }
+
+        var rows = sheetToObjects(workbook, sheetName);
+        var customers = getRegularCustomers();
+        var count = 0;
+
+        rows.forEach(function (row) {
+            var phone = String(pickField(row, ["Phone", "phone", "Customer Phone", "Mobile"]) || "").trim();
+            var name = String(pickField(row, ["Name", "name", "Customer Name"]) || "").trim();
+            var id = phone.replace(/\D/g, "");
+
+            if (!id || !name) { return; }
+
+            var profile = {
+                id: id,
+                phone: phone,
+                name: name,
+                paymentType: String(pickField(row, ["Payment Type", "paymentType"]) || ""),
+                updatedAt: new Date().toISOString()
+            };
+
+            var index = -1;
+            customers.forEach(function (saved, position) {
+                if (saved.id === id) { index = position; }
+            });
+
+            if (index >= 0) {
+                customers[index] = profile;
+            } else {
+                customers.unshift(profile);
+            }
+            count += 1;
+        });
+
+        if (count) { saveRegularCustomers(customers); }
+        return count;
+    }
+
+    function importSettingsSheet(workbook) {
+        var sheetName = findSheetName(workbook, "settings");
+        if (!sheetName) { return 0; }
+
+        var rows = sheetToObjects(workbook, sheetName);
+        if (!rows.length) { return 0; }
+
+        var settings = getSettings();
+        var count = 0;
+
+        rows.forEach(function (row) {
+            var key = String(pickField(row, ["Setting", "setting", "Key", "key"]) || "").trim().toLowerCase();
+            var value = String(pickField(row, ["Value", "value"]) || "").trim();
+            if (!key) { return; }
+
+            if (key === "message language" || key === "language") {
+                settings.language = value === "mr" ? "mr" : "en";
+                count += 1;
+            }
+            // Admin password is never restored from a spreadsheet.
+        });
+
+        if (count) { saveSettings(settings); }
+        return count;
+    }
+
+    function importMenuSheet(workbook) {
+        var sheetName = findSheetName(workbook, "menu");
+        if (!sheetName) { return 0; }
+
+        var before = pageState.menuItems.length;
+        var items = parseMenuExcelWorkbook({ SheetNames: [sheetName], Sheets: workbook.Sheets });
+        if (!items.length) { return 0; }
+
+        mergeMenuItems(items);
+        return pageState.menuItems.length - before;
+    }
+
+    function updateImportStatus(message) {
+        updateAdminStatus("data-workbook-status", message);
+        updateAdminStatus("admin-menu-status", message);
+    }
+
+    window.importDataWorkbook = function () {
+        if (!ensureXlsxReady()) { return; }
+
+        var picker = document.createElement("input");
+        picker.type = "file";
+        picker.accept = ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+        picker.addEventListener("change", function () {
+            var file = picker.files && picker.files[0];
+            if (!file) { return; }
+
+            var reader = new FileReader();
+            reader.onload = function () {
+                var workbook;
+                try {
+                    workbook = window.XLSX.read(reader.result, { type: "array", cellDates: true });
+                } catch (_error) {
+                    updateImportStatus("Could not read that file. Please pick a valid Excel workbook.");
+                    return;
+                }
+
+                var summary = [];
+                var daily = importDailySheet(workbook);
+                if (daily) { summary.push(daily + " daily entries"); }
+                var monthly = importMonthlySheet(workbook);
+                if (monthly) { summary.push(monthly + " monthly cost entries"); }
+                var orders = importOrdersSheet(workbook);
+                if (orders) { summary.push(orders + " orders"); }
+                var customers = importCustomersSheet(workbook);
+                if (customers) { summary.push(customers + " regular customers"); }
+                var menuAdded = importMenuSheet(workbook);
+                if (menuAdded > 0) { summary.push(menuAdded + " new menu items"); }
+                var settings = importSettingsSheet(workbook);
+                if (settings) { summary.push("settings"); }
+
+                if (!summary.length) {
+                    updateImportStatus("No matching sheets found. Use sheet names like \"Buisness Data per day\", \"Buisness Data per month\", \"" + DATA_SHEETS.customers + "\", \"" + DATA_SHEETS.menu + "\" or \"" + DATA_SHEETS.settings + "\".");
+                    return;
+                }
+
+                renderAdminMenuList();
+                loadAdminSettingsForm();
+                renderRegularCustomers();
+                renderDailyLog();
+                renderMonthlyLog();
+                renderMasterDashboard();
+                updateAnalyticsSummary();
+
+                updateImportStatus("Imported " + summary.join(", ") + ".");
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        picker.click();
+    };
+
+    window.exportDailyLog = function () {
+        if (!ensureXlsxReady()) { return; }
+        var rows = buildDailyRows();
+        if (!rows.length) { window.alert("No daily entries to export."); return; }
+        var wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), DATA_SHEETS.daily);
+        downloadWorkbook("cafe-vibes-daily-log.xlsx", wb);
+    };
+
+    window.exportMonthlyLog = function () {
+        if (!ensureXlsxReady()) { return; }
+        var rows = buildMonthlyRows();
+        if (!rows.length) { window.alert("No monthly fixed cost entries to export."); return; }
+        var wb = window.XLSX.utils.book_new();
+        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), DATA_SHEETS.monthly);
+        downloadWorkbook("cafe-vibes-monthly-costs.xlsx", wb);
+    };
+
+    window.exportMasterDashboard = function () {
+        if (!ensureXlsxReady()) { return; }
+        var rows = buildMasterRows();
         if (!rows.length) { window.alert("No data to export."); return; }
         var wb = window.XLSX.utils.book_new();
-        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), "Master_Dashboard");
+        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.json_to_sheet(rows), DATA_SHEETS.master);
         downloadWorkbook("cafe-vibes-master-dashboard.xlsx", wb);
     };
 
