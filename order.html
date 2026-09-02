@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Vibes | New Order</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #d97706;
+            --primary-strong: #b45309;
+            --success: #059669;
+            --danger: #dc2626;
+            --bg: #f7f3ea;
+            --bg-2: #fff8ef;
+            --card: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(148, 163, 184, 0.18);
+            --text: #1f2937;
+            --muted: #64748b;
+            --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(217, 119, 6, 0.16), transparent 34%),
+                radial-gradient(circle at top right, rgba(5, 150, 105, 0.12), transparent 30%),
+                linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            padding: 18px;
+            min-height: 100vh;
+        }
+        body.is-entering header,
+        body.is-entering .grid > .card {
+            opacity: 0;
+            transform: translateY(22px) scale(0.985);
+        }
+        header,
+        .grid > .card {
+            transition: opacity 560ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        body.is-ready header,
+        body.is-ready .grid > .card {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        body.is-ready .grid > .card:nth-child(1) { transition-delay: 90ms; }
+        body.is-ready .grid > .card:nth-child(2) { transition-delay: 180ms; }
+        .page-shell { max-width: 1440px; margin: 0 auto; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.78));
+            padding: 18px 20px;
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 12px;
+            z-index: 20;
+        }
+        h1 { font-size: clamp(1.8rem, 2.5vw, 2.8rem); color: var(--primary-strong); line-height: 1.05; }
+        .brand { display: flex; align-items: center; gap: 14px; }
+        .brand-copy { display: flex; flex-direction: column; gap: 2px; }
+        .brand-copy p { color: var(--muted); font-size: 0.86rem; }
+        .header-badge, .header-link {
+            background: linear-gradient(135deg, #111827, #374151);
+            color: #fff;
+            border-radius: 999px;
+            padding: 10px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .header-link { background: linear-gradient(135deg, var(--primary), var(--primary-strong)); }
+        .brand-logo {
+            width: 76px;
+            height: 76px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.8);
+            padding: 8px;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.75fr) minmax(360px, 1fr);
+            gap: 18px;
+            margin-bottom: 20px;
+            align-items: start;
+        }
+        .card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(14px);
+        }
+        .header-link:hover, .header-badge:hover { filter: brightness(1.08); }
+        :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 10px; }
+        .item-selection::-webkit-scrollbar, .analytics-table-wrap::-webkit-scrollbar { width: 10px; }
+        .item-selection::-webkit-scrollbar-thumb, .analytics-table-wrap::-webkit-scrollbar-thumb {
+            background: rgba(217, 119, 6, 0.28);
+            border-radius: 999px;
+            border: 3px solid transparent;
+            background-clip: content-box;
+        }
+        .item-selection::-webkit-scrollbar-thumb:hover, .analytics-table-wrap::-webkit-scrollbar-thumb:hover { background: rgba(180, 83, 9, 0.45); background-clip: content-box; }
+        h2 {
+            font-size: 1.08rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+            letter-spacing: 0.01em;
+        }
+        .count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #9a3412;
+            background: #ffedd5;
+            border: 1px solid #fdba74;
+            line-height: 1;
+        }
+        .profit { color: var(--success); }
+        .loss { color: var(--danger); }
+        .muted-help { color: var(--muted); font-size: 0.78rem; margin-top: 6px; line-height: 1.5; }
+        textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 0.92rem; background: rgba(255,255,255,0.92); }
+        .analytics-table-wrap { max-height: 230px; overflow: auto; border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 14px; background: rgba(255,255,255,0.75); }
+        .item-selection { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 14px; max-height: 720px; overflow-y: auto; padding-right: 6px; }
+        .menu-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 9px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,250,252,0.9));
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            padding: 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95rem;
+            min-height: 220px;
+            transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+        }
+        .menu-photo {
+            width: 100%;
+            height: 118px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: #ffffff;
+            transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .menu-btn:hover .menu-photo { transform: scale(1.035); }
+        .menu-card-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+            flex: 1;
+            width: 100%;
+        }
+        .menu-btn:hover { transform: translateY(-3px); border-color: rgba(217, 119, 6, 0.45); background: #fffaf1; box-shadow: 0 16px 26px rgba(15, 23, 42, 0.09); }
+        .menu-btn:active { transform: translateY(-1px) scale(0.995); }
+        .menu-btn span { display: block; font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+        .menu-name-editable, .menu-price-editable { display: block; width: 100%; margin-top: 2px; padding: 2px 1px; border-radius: 4px; outline: none; }
+        .menu-name-editable { font-size: 0.97rem; font-weight: 700; color: #0f172a; }
+        .menu-price-editable { margin-top: 2px; font-size: 0.83rem; color: #475569; }
+        .menu-name-editable.is-editing, .menu-price-editable.is-editing { background: #ffffff; box-shadow: inset 0 0 0 1px var(--primary); }
+        .menu-item-card { position: relative; overflow: hidden; border-radius: 14px; }
+        .menu-tip { font-size: 0.78rem; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+        .menu-search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin: 12px 0 10px; }
+        .menu-search-row input { margin: 0; }
+        .btn-secondary { background: linear-gradient(135deg, #0f766e, #115e59); color: #ffffff; width: auto; padding: 9px 14px; font-size: 0.85rem; margin: 0; border: none; box-shadow: 0 10px 18px rgba(15, 118, 110, 0.18); text-decoration: none; }
+        .btn-ghost { background: rgba(255,255,255,0.9); color: #334155; border: 1px solid rgba(148, 163, 184, 0.28); width: auto; padding: 9px 14px; font-size: 0.85rem; margin: 0; text-decoration: none; }
+        .status-text { font-size: 0.8rem; color: #475569; margin-top: 6px; line-height: 1.5; }
+        .customer-save-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .customer-save-row .btn {
+            width: auto;
+            margin-top: 0;
+            padding: 10px 12px;
+            font-size: 0.82rem;
+        }
+        .customer-save-row input { margin: 0; }
+        .form-subhead {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 18px 0 10px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--primary-strong);
+        }
+        .form-subhead::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(148, 163, 184, 0.28);
+        }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.85rem; margin-bottom: 6px; font-weight: 600; color: #334155; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid rgba(148, 163, 184, 0.32); border-radius: 12px; font-size: 0.92rem; background: rgba(255,255,255,0.92); }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(217, 119, 6, 0.65); box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12); }
+        .order-summary-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9rem; overflow: hidden; }
+        .order-summary-table th, .order-summary-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid rgba(148, 163, 184, 0.16); }
+        .order-summary-table thead th { position: sticky; top: 0; background: rgba(255,255,255,0.96); z-index: 1; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; }
+        .btn { width: 100%; padding: 12px 14px; border: none; border-radius: 14px; font-size: 0.98rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 10px; text-decoration: none; transition: transform 160ms ease, box-shadow 160ms ease, filter 160ms ease; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08); }
+        .btn-whatsapp { background: linear-gradient(135deg, #25d366, #0ea64f); color: white; }
+        .btn-hold { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #ffffff; }
+        .btn-outline {
+            background: #ffffff;
+            color: #1e293b;
+            border: 1.5px solid #94a3b8;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.25);
+        }
+        .btn-outline:hover {
+            border-color: #64748b;
+            background: #f8fafc;
+        }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; padding: 8px 12px; font-size: 0.8rem; width: auto; margin: 0; }
+        .qty-actions { display: flex; gap: 6px; }
+        .icon-btn { border: 1px solid rgba(148, 163, 184, 0.28); background: rgba(255,255,255,0.96); color: #0f172a; border-radius: 10px; width: 28px; height: 28px; cursor: pointer; font-weight: 700; line-height: 1; }
+        .icon-btn:hover { border-color: rgba(217, 119, 6, 0.65); color: var(--primary-strong); }
+        .nav-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+        .grid > .card:first-child { min-height: 0; }
+        .order-summary-panel {
+            position: sticky;
+            top: 14px;
+            max-height: calc(100vh - 126px);
+            overflow: auto;
+        }
+        .order-action-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .hold-orders-box {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.3);
+        }
+        .hold-orders-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .hold-order-row {
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            border-radius: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .hold-order-main {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+        }
+        .hold-order-main strong {
+            color: #0f172a;
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
+        .hold-order-main span {
+            color: #64748b;
+            font-size: 0.78rem;
+        }
+        .hold-order-actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+        .hold-order-actions .btn {
+            width: auto;
+            margin-top: 0;
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            border-radius: 10px;
+        }
+        .summary-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .summary-modal.hidden {
+            display: none;
+        }
+        .summary-modal-panel {
+            width: min(920px, 100%);
+            max-height: 86vh;
+            overflow: auto;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.28);
+            padding: 18px;
+        }
+        .summary-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+            padding-bottom: 10px;
+        }
+        .summary-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .summary-metric {
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 12px;
+            padding: 10px;
+            background: rgba(248, 250, 252, 0.9);
+        }
+        .summary-metric span {
+            display: block;
+            color: #64748b;
+            font-size: 0.77rem;
+        }
+        .summary-metric strong {
+            display: block;
+            color: #0f172a;
+            font-size: 1rem;
+            margin-top: 4px;
+        }
+        .summary-order-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .summary-order-item {
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 10px;
+            padding: 9px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .summary-order-item small {
+            color: #64748b;
+            font-size: 0.74rem;
+        }
+        @media(max-width: 600px) {
+            body { padding: 12px; }
+            header { flex-direction: column; align-items: flex-start; }
+            .nav-row { width: 100%; justify-content: flex-start; }
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.7rem; }
+            .brand-logo { width: 58px; height: 58px; }
+            .item-selection { max-height: 460px; }
+            .order-summary-panel { position: static; max-height: none; }
+            .customer-save-row { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="is-entering">
+    <div class="page-shell">
+        <header>
+            <div class="brand">
+                <img src="Logo.png" alt="Cafe Vibes Logo" class="brand-logo">
+                <div class="brand-copy">
+                    <h1>Cafe Vibes</h1>
+                    <p>...A Space For Every Story...</p>
+                </div>
+            </div>
+            <div class="nav-row">
+                <a href="index.html" class="header-link">Home</a>
+                <div class="header-badge">New Order</div>
+            </div>
+        </header>
+
+        <div class="grid">
+            <div class="card">
+                <h2>
+                    <span>1. Add Items to Bill</span>
+                    <span id="order-menu-count" class="count-badge">0</span>
+                </h2>
+                <div class="menu-search-row">
+                    <input type="search" id="menu-search-input" placeholder="Search item or group">
+                    <button type="button" class="btn btn-ghost" id="clear-menu-search-btn" style="width: auto; margin: 0;">Clear</button>
+                </div>
+                <div class="item-selection" id="menu-container"></div>
+                <p class="menu-tip">Tap items to add quantity.</p>
+
+                <div style="margin-top: 20px;">
+                    <h2>2. Customer & Table Details</h2>
+                    <div class="form-group">
+                        <label>Select Table</label>
+                        <select id="bill-table">
+                            <option value="Takeaway">Takeaway / Delivery</option>
+                            <option value="Table 1">Table 1</option>
+                            <option value="Table 2">Table 2</option>
+                            <option value="Table 3">Table 3</option>
+                            <option value="Table 4">Table 4</option>
+                        </select>
+                    </div>
+                    <h3 class="form-subhead">Saved Customer</h3>
+                    <div class="form-group">
+                        <label for="regular-customer-select">Saved Regular Customers</label>
+                        <div class="customer-save-row">
+                            <input type="text" id="regular-customer-select" list="regular-customer-options" placeholder="Type customer name to search" autocomplete="off">
+                            <datalist id="regular-customer-options"></datalist>
+                            <button type="button" id="save-regular-customer-btn" class="btn btn-ghost">Save Current</button>
+                            <button type="button" id="remove-regular-customer-btn" class="btn btn-danger">Remove</button>
+                        </div>
+                        <p class="muted-help">Start typing a saved customer's name and pick a suggestion to auto-fill their details.</p>
+                    </div>
+
+                    <h3 class="form-subhead">New Customer</h3>
+                    <div class="form-group">
+                        <label>Customer Mobile Number (For WhatsApp)</label>
+                        <input type="tel" id="cust-phone" placeholder="Enter WhatsApp number (10-digit or +91...)" inputmode="tel">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Name</label>
+                        <input type="text" id="cust-name" placeholder="Optional Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Payment Type</label>
+                        <select id="payment-type">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>WhatsApp Message Language</label>
+                        <select id="msg-language">
+                            <option value="en">English</option>
+                            <option value="mr">Marathi</option>
+                        </select>
+                    </div>
+
+                    <p class="status-text">WhatsApp receipt format and business settings are controlled from Admin Configuration.</p>
+                </div>
+            </div>
+
+            <div class="card order-summary-panel">
+                <h2>Order summary</h2>
+                <table class="order-summary-table">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-table-body">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #94a3b8; padding: 20px;">Cart is empty. Tap items to add.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="border-top: 2px dashed #e2e8f0; padding-top: 15px; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px;">
+                        <span>Total Amount:</span>
+                        <span id="cart-total">₹0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #475569; font-size: 0.92rem; margin-bottom: 12px;">
+                        <span>Total Items:</span>
+                        <span id="cart-item-count">0</span>
+                    </div>
+
+                    <div class="order-action-grid">
+                        <button class="btn btn-hold" onclick="holdCurrentOrder()">Hold Order</button>
+                        <button class="btn btn-whatsapp" onclick="processAndSendWhatsAppBill()">Submit Order & Send WhatsApp Receipt</button>
+                        <button class="btn btn-outline" onclick="showTodayOrdersSummaryPopup()">All today's Orders</button>
+                    </div>
+                </div>
+
+                <div class="hold-orders-box">
+                    <h2>Held Orders</h2>
+                    <div id="hold-orders-list" class="hold-orders-list">
+                        <p class="status-text">No hold orders yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="today-orders-modal" class="summary-modal hidden" role="dialog" aria-modal="true" aria-label="Today's order summary">
+        <div class="summary-modal-panel">
+            <div class="summary-modal-header">
+                <h2 style="margin: 0; padding: 0; border: 0;">Today's Order Summary</h2>
+                <button type="button" class="btn btn-danger" style="margin-top: 0;" onclick="closeTodayOrdersSummaryPopup()">Close</button>
+            </div>
+            <div id="today-orders-summary-content"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script src="app.extras.js"></script>
+    <script>
+        (function () {
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    document.body.classList.add('is-ready');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
