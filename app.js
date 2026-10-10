@@ -771,6 +771,26 @@
         pageState.cart = {};
         renderCart();
     }
+    //New code added here 100ct26
+
+function normalizeIndianWhatsAppNumber(input) {
+
+let digits String(input || "").replace(/\D/g, ""); // keep only digits
+
+// 09876543210 9876543210
+
+if (digits. length 11 && digits.startsWith("0")) {
+digits digits.slice(1);
+}
+//9876543210 -> 919876543210
+if (digits.length== 10) {
+digits = "91" + digits;
+// valid final format for India
+if (digits.length 12 && digits.startsWith("91")) {
+return digits;
+}
+return null; // invalid
+}
 
     function processAndSendWhatsAppBill() {
         if (!Object.keys(pageState.cart).length) {
@@ -785,30 +805,45 @@
         var table = (document.getElementById("bill-table") || {}).value || "Takeaway";
         var language = (document.getElementById("msg-language") || {}).value || settings.language || "en";
         var paymentType = (document.getElementById("payment-type") || {}).value || "Cash";
+        //new code added here 10oct
+        const rawPhone = document.getElementById("cusd-phone").value.trim;
+        const phone = normalizeIndianWhatsAppNumber(rawPhone);
 
-        var rawPhone = (phoneInput && phoneInput.value ? phoneInput.value : "").replace(/[^\d]/g, "");
-        if (!rawPhone) {
-            window.alert("Please enter customer mobile number.");
-            return;
-        }
+if (!phone) {
 
-        var totals = cartTotals();
-        var now = new Date();
-        var orderId = "ORD-" + now.getTime().toString().slice(-6);
-        var billItems = buildBillItemsLines();
+alert("Please enter a valid WhatsApp number (10-digit Indian mobile or +91 form return;
 
-        var template = getHardcodedWhatsAppTemplate(language, table);
-        var message = template
-            .replaceAll("{{customer_name}}", customerName || "Customer")
-            .replaceAll("{{business_name}}", businessName || "Cafe Vibes")
-            .replaceAll("{{table}}", table)
-            .replaceAll("{{bill_items}}", billItems)
-            .replaceAll("{{order_total}}", currency(totals.total))
-            .replaceAll("{{order_time}}", now.toLocaleString())
-            .replaceAll("{{order_id}}", orderId) + "\n*Payment Type:* " + paymentType;
+//Changed above code 100ct26
 
-        var waUrl = "https://wa.me/" + rawPhone + "?text=" + encodeURIComponent(message);
-        window.open(waUrl, "_blank", "noopener");
+var totals cartTotals();
+
+var now new Date();
+
+var orderId = "ORD-" + now.getTime().toString().slice(-6);
+
+var billItems = buildBillItemsLines();
+
+var template = getHardcodedWhatsAppTemplate(language, table);
+
+var message template
+
+.replaceAll("((customer_name}}", customerName || "Customer")
+
+.replaceAll("((business_name}}", businessName || "Cafe Vibes") .replaceAll("{{table}}", table)
+
+.replaceAll("{{bill_items}}", billItems)
+
+.replaceAll("{{order_total}}", currency (totals.total)) .replaceAll("{{order_time}}", now.toLocaleString())
+
+.replaceAll("{{order_id}}", orderId) + "\n*Payment Type:* " + paymentType;
+
+//Changed below code 100ct26
+
+const waurl = 'https://wa.me/$(phone)?text=$(encodeURIComponent(message)}`;
+
+window.open(waUrl, "_blank");
+
+//Changed above code 100ct26
 
         saveOrderAndClear(message, {
             orderId: orderId,
