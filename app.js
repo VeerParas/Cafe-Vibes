@@ -779,7 +779,7 @@ let digits = String(input || "").replace(/\D/g, ""); // keep only digits
 
 // 09876543210 9876543210
 
-if (digits. length 11 === 11 && digits.startsWith("0")) {
+if (digits.length 11 === 11 && digits.startsWith("0")) {
 digits = digits.slice(1);
 }
     
